@@ -1,4 +1,7 @@
 venv
+logs
+plugins
+terraform/*.tfstate
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
