@@ -48,3 +48,24 @@ resource "google_bigquery_dataset" "dataset" {
   project    = var.project
   location   = var.region
 }
+
+#dbt model
+resource "google_bigquery_dataset" "dbt-datamodel" {
+  dataset_id = "dbt_taxi_data"
+  project    = var.project
+  location   = var.region
+}
+
+#production data
+resource "google_bigquery_dataset" "production-dataset" {
+  dataset_id = "production"
+  project    = var.project
+  location   = var.region
+}
+
+#staging data
+resource "google_bigquery_dataset" "staging-dataset" {
+  dataset_id = "staging"
+  project    = var.project
+  location   = var.region
+}
