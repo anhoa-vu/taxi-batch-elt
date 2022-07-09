@@ -3,13 +3,14 @@
 with yellowtrip as (
     SELECT 
         *,
-        1 AS trip_type -- to indicate yellow taxi's trip
+        'Yellow' AS trip_type -- to indicate yellow taxi's trip
     FROM
         {{ source('staging', 'yellow_trip_data') }}
     WHERE vendorid is not null
 )
 
 SELECT
+    {{ dbt_utils.surrogate_key(['vendorid', 'tpep_pickup_datetime', 'tpep_dropoff_datetime', 'pulocationid', 'payment_type'])}} as tripid,
     cast(vendorid as integer) as vendorid,
     cast(ratecodeid as integer) as ratecodeid,
     cast(pulocationid as integer) as  pickup_locationid,
@@ -22,7 +23,7 @@ SELECT
     store_and_fwd_flag,
     cast(passenger_count as integer) as passenger_count,
     cast(trip_distance as numeric) as trip_distance,
-    trip_type as trip_type
+    trip_type as trip_type,
 
     -- payment info
     cast(fare_amount as numeric) as fare_amount,
@@ -40,8 +41,8 @@ SELECT
 FROM yellowtrip
 
 -- dbt build --m <model.sql> --var 'is_test_run: false'
-{% if var('is_test_run', default=true) %}
+-- {% if var('is_test_run', default=true) %}
 
-  limit 100
+--   limit 100
 
-{% endif %}
+-- {% endif %}
