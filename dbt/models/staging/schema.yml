@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+    - name: staging
+      database: taxi-batch-elt
+      schema: taxi_data_all
+
+      tables:
+        - name: yellow_trip_data
+      
