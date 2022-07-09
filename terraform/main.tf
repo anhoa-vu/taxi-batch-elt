@@ -51,7 +51,7 @@ resource "google_bigquery_dataset" "dataset" {
 
 #dbt model
 resource "google_bigquery_dataset" "dbt-datamodel" {
-  dataset_id = "dbt_taxi_data"
+  dataset_id = "dbt_ahoavu"
   project    = var.project
   location   = var.region
 }
