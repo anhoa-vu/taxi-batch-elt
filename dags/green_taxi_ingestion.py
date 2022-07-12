@@ -2,6 +2,7 @@ import os
 
 from airflow import DAG
 from airflow.utils.dates import days_ago
+from airflow.utils.trigger_rule import TriggerRule
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
 
@@ -10,7 +11,7 @@ from airflow.providers.google.cloud.operators.bigquery import BigQueryCreateExte
 
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
 BUCKET = os.environ.get("GCP_GCS_BUCKET")
-dataset_file = "green_tripdata_2021-02.parquet"
+dataset_file = "green_tripdata_2021-01.parquet"
 dataset_url = f"https://d37ci6vzurychx.cloudfront.net/trip-data/{dataset_file}"
 path_to_local_home = os.environ.get("AIRFLOW_HOME", "/opt/airflow/")
 
@@ -81,7 +82,7 @@ with DAG(
         },
     )
 
-    insert_query = (
+    INSERT_QUERY = (
     f"""
     INSERT INTO {BIGQUERY_DATASET}.green
     SELECT * FROM {BIGQUERY_DATASET}.external_table;
@@ -89,18 +90,29 @@ with DAG(
     )
 
     CREATE_BQ_TBL_QUERY = (
-        f"CREATE OR REPLACE TABLE {BIGQUERY_DATASET}.green \
+        f"CREATE TABLE {BIGQUERY_DATASET}.green \
         PARTITION BY DATE(lpep_pickup_datetime) \
         AS \
         SELECT * FROM {BIGQUERY_DATASET}.external_table;"
     )
-
+    
     # Create a partitioned table from external table
     bq_create_partitioned_table_job = BigQueryInsertJobOperator(
         task_id=f"bq_create_partitioned_table_job",
         configuration={
             "query": {
-                "query": insert_query,
+                "query": CREATE_BQ_TBL_QUERY,
+                "useLegacySql": False,
+            }
+        }
+    )
+
+    #Insert data to existing table job
+    insert_table_job = BigQueryInsertJobOperator(
+        task_id=f"insert_table_job",
+        configuration={
+            "query": {
+                "query": INSERT_QUERY,
                 "useLegacySql": False,
             }
         }
@@ -108,7 +120,8 @@ with DAG(
 
     delete_external_table = BigQueryDeleteTableOperator(
         task_id = "detele_external_table",
+        trigger_rule = TriggerRule.ONE_SUCCESS,
         deletion_dataset_table = f"{PROJECT_ID}.{BIGQUERY_DATASET}.external_table"
     )
 
-    download_data >> local_to_gcs_task >> bigquery_external_table_task >> bq_create_partitioned_table_job >> delete_external_table
+    download_data >> local_to_gcs_task >> bigquery_external_table_task >> [bq_create_partitioned_table_job, insert_table_job] >> delete_external_table
