@@ -13,7 +13,7 @@ SELECT
     cast(vendorid as integer) as vendorid,
     cast (ratecodeid as integer) as ratecodeid,
     cast(pulocationid as integer) as pickup_locationid,
-    cast(dolocationid as integer) as dropoff_locatonid,
+    cast(dolocationid as integer) as dropoff_locationid,
 
     --timestamp
     cast(lpep_pickup_datetime as timestamp) as pickup_datetime,
@@ -30,6 +30,7 @@ SELECT
     cast(mta_tax as numeric) as mta_tax,
     cast(tip_amount as numeric) as tip_amount,
     cast(tolls_amount as numeric) as tolls_amount,
+    cast(total_amount as numeric) as total_amount,
     cast(0 as numeric) as ehail_fee,
     cast(improvement_surcharge as numeric) as improvement_surcharge,
     cast(payment_type as integer) as payment_type,
