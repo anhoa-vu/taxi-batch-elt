@@ -7,4 +7,4 @@ sources:
 
       tables:
         - name: yellow_trip_data
-      
+        - name: green_trip_data
