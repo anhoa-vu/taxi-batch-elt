@@ -11,7 +11,7 @@ from airflow.providers.google.cloud.operators.bigquery import BigQueryCreateExte
 
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
 BUCKET = os.environ.get("GCP_GCS_BUCKET")
-dataset_file = "yellow_tripdata_2021-02.parquet"
+dataset_file = "yellow_tripdata_2021-03.parquet"
 dataset_url = f"https://d37ci6vzurychx.cloudfront.net/trip-data/{dataset_file}"
 path_to_local_home = os.environ.get("AIRFLOW_HOME", "/opt/airflow/")
 
@@ -88,10 +88,28 @@ with DAG(
         SELECT * FROM {BIGQUERY_DATASET}.external_table;"
     )
 
+    # INSERT_QUERY = (
+    # f"""
+    # INSERT INTO {BIGQUERY_DATASET}.yellow_trip_data
+    # SELECT * FROM {BIGQUERY_DATASET}.external_table;
+    # """
+    # )
     INSERT_QUERY = (
     f"""
+    DELETE FROM {BIGQUERY_DATASET}.yellow_trip_data A 
+    WHERE EXISTS
+    (SELECT null 
+    FROM {BIGQUERY_DATASET}.external_table B
+    WHERE ((A.VendorID = B.VendorID) AND (A.tpep_pickup_datetime = B.tpep_pickup_datetime)));
+    
+    -- not matched case
     INSERT INTO {BIGQUERY_DATASET}.yellow_trip_data
-    SELECT * FROM {BIGQUERY_DATASET}.external_table;
+    SELECT * FROM {BIGQUERY_DATASET}.external_table B
+    WHERE NOT EXISTS 
+    (SELECT null 
+    FROM {BIGQUERY_DATASET}.yellow_trip_data A
+    WHERE ((A.VendorID = B.VendorID) AND (A.tpep_pickup_datetime = B.tpep_pickup_datetime)));
+    
     """
     )
 
